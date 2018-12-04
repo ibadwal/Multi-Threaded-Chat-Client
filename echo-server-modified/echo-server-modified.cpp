@@ -34,6 +34,7 @@ struct user{
 //create a struct to represent a chat room
 struct room{
   std::vector<user> user_list;  //list of all users within this room
+  char room_pass[16];           //add a room_pass
 };
 
 // We will use this as a simple circular buffer of incoming messages.
