@@ -28,13 +28,13 @@ typedef struct sockaddr SA;
 struct user{
   char nickname[16];          //nickname of a user
   int* connection_fd;         //socket connection between server and user
-  room* current_room = NULL;  //the current room the user is in (NULL at start, not in any room)
-}
+  char room_name[16];         //the current room the user is in
+};
 
 //create a struct to represent a chat room
 struct room{
-  vector<user> user_list;  //list of all users within this room
-}
+  std::vector<user> user_list;  //list of all users within this room
+};
 
 // We will use this as a simple circular buffer of incoming messages.
 char message_buf[20][50];
@@ -94,7 +94,7 @@ int send_list_message(int connfd) {
   return send_message(connfd, message);
 }
 
-void respond(int conndfd){
+void respond(int connfd){
   size_t n;
 
   // Holds the received message.
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
   printf("Loop starting\n");
   while (1){
     //file descriptor for the connection
-    int* connfdp = malloc(sizeof(int));
+    int *connfdp = (int*)(malloc(sizeof(int)));
     //client IP info variable
     struct sockaddr_in clientaddr;
     // Wait for incoming connections.
