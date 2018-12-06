@@ -1,0 +1,12 @@
+\HELP
+\ROOMS
+\JOIN danny-m fun-room assdasda
+\JOIN  fun-room
+\JOIN danny-m
+\JOIN  
+\JOIN danny-m fun-room
+hey guys what's up
+\WHO
+where is everyone
+\LAEVE
+\LEAVE
