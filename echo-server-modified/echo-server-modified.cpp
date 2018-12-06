@@ -15,6 +15,22 @@
 
 #include <vector>
 
+struct room;
+
+//create a struct to represent a user
+struct user{
+  char nickname[16];          //nickname of a user
+  int connection_fd;          //socket connection between server and user
+  room* cur_room;             //the current room the user is in
+};
+
+//create a struct to represent a chat room
+struct room{
+  std::vector<user> user_list;  //list of all users within this room
+  char room_pass[16];           //add a room_pass
+};
+
+
 /* Simplifies calls to bind(), connect(), and accept() */
 typedef struct sockaddr SA;
 
@@ -24,18 +40,8 @@ typedef struct sockaddr SA;
 /* Second argument to listen() */
 #define LISTENQ 1024
 
-//create a struct to represent a user
-struct user{
-  char nickname[16];          //nickname of a user
-  int* connection_fd;         //socket connection between server and user
-  char room_name[16];         //the current room the user is in
-};
-
-//create a struct to represent a chat room
-struct room{
-  std::vector<user> user_list;  //list of all users within this room
-  char room_pass[16];           //add a room_pass
-};
+//initialize a vector of rooms that will be used as chat rooms
+std::vector<room> room_list;
 
 // We will use this as a simple circular buffer of incoming messages.
 char message_buf[20][50];
@@ -143,19 +149,13 @@ int main(int argc, char **argv) {
   // The listening file descriptor.
   int listenfd = open_listenfd(port);
 
-  //create a hash map of rooms (Key = room name)
-  
   //create the default room
-
+  //room new_room;
+  //add the room to the list of rooms
+  //room_list.push_back(&new_room);
 
   // The main server loop - runs forever...
   printf("Loop starting\n");
-
-  /*
-  struct room{
-  std::vector<user> user_list;  //list of all users within this room
-  char room_pass[16];           //add a room_pass
-};*/
   while (1){
     //file descriptor for the connection
     int *connfdp = (int*)(malloc(sizeof(int)));
@@ -177,35 +177,6 @@ int main(int argc, char **argv) {
     pthread_create(&tid, NULL, thread, connfdp);
   }
   printf("Server ending\n");
-  /*while (1) {
-    // The connection file descriptor.
-    int *connfdp = malloc(sizeof(int));
-
-    // The client's IP address information.
-    struct sockaddr_in clientaddr;
-
-    // Wait for incoming connections.
-    socklen_t clientlen = sizeof(struct sockaddr_in);
-    *connfdp = accept(listenfd, (SA *)&clientaddr, &clientlen);
-
-    // determine the domain name and IP address of the client
-    struct hostent *hp =
-        gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr,
-                      sizeof(clientaddr.sin_addr.s_addr), AF_INET);
-
-    // The server IP address information.
-    char *haddrp = inet_ntoa(clientaddr.sin_addr);
-
-    // The client's port number.
-    unsigned short client_port = ntohs(clientaddr.sin_port);
-
-    printf("server connected to %s (%s), port %u\n", hp->h_name, haddrp,
-           client_port);
-
-    // Create a new thread to handle the connection.
-    pthread_t tid;
-    pthread_create(&tid, NULL, thread, connfdp);
-  }*/
 }
 
 /* thread routine */
