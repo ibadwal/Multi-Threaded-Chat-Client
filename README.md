@@ -6,14 +6,14 @@ TODO:
 	- Concurrency + Threads
 	- Each client connecting to the server is a thread
 	- Support reading/writing of socket from multiple threads (Assume socket provided by OS is thread safe)
-- User (Struct with info) [NOT STARTED]
+- User (Struct with info) [STARTED]
 	- Associated with a nickname
 	- Associated with a socket connection to server
-- Chat Rooms [NOT STARTED]
+- Chat Rooms [STARTED]
 	- Chat server that supports multiple chat rooms
 	- Way to implement: Data structure for a chat room which holds a list of user structs
 	- Users can join/leave chat rooms (allow list to change over time)
-- Chat Protocol Commands [NOT STARTED]
+- Chat Protocol Commands [STARTED]
 	- \JOIN {nickname} {room}
 	When the server receives this command it will add the user to the list of users associated with a particular room. If the room does not exist it will create a new room and add the user to the list of users associated with the new room. The server must respond to the client with the name of the room.
 	- \ROOMS
@@ -34,4 +34,4 @@ TODO:
 	- Scripting (files with commands etc.)
 -	Added Functionality [NOT STARTED]
 	- Add a new feature not listed already for basic features
-- Video [NOT STARTED]
+- 	Video [NOT STARTED]
