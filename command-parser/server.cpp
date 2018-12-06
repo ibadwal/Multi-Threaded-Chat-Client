@@ -7,11 +7,21 @@
 using namespace std;
 
 void parse_input(string);
+string rainbow(string);
 
+const string BLACK = "\033[1;30m";
+const string RED = "\033[1;31m";
+const string GREEN = "\033[1;32m";
 const string YELLOW = "\033[1;33m";
+const string BLUE = "\033[1;34m";
 const string MAGENTA = "\033[1;35m";
 const string CYAN = "\033[1;36m";
-const string RED = "\033[1;31m";
+const string WHITE = "\033[1;37m";
+const string GRAY = "\033[0;37m";
+const string GOLD = "\033[0;33m";
+const string DARK_RED = "\033[0;31m";
+const string PURPLE = "\033[0;35m";
+const string DARK_GREEN = "\033[0;32m";
 const string RESET = "\033[0m";
 
 int main(int argc, char *argv[]){
@@ -59,8 +69,8 @@ void leave(){
 }
 
 void join(string nickname, string room_name){
-	cout << MAGENTA << "[JOIN] Joining as " << RESET << nickname << MAGENTA 
-		<< " in room " << RESET << room_name << "\n"; //TEMPORARY	
+	cout << MAGENTA << "[JOIN] Joining room " << RESET << room_name << MAGENTA 
+		<< " as " << RESET << nickname << "\n"; //TEMPORARY	
 	//TODO
 	
 }
@@ -78,7 +88,6 @@ void direct_message(string recipient, string message){
 	
 }
 
-
 void invalid_command(){
 	cout << RED << "ERROR: Invalid command." << RESET << "\n"; //TEMPORARY
 	//TODO
@@ -93,9 +102,13 @@ void invalid_command(){
 
 	TODO:
 		- Adding extra arguments does not always cause an error
-
 */
 void parse_input(string input){
+	
+	//Removes newline if it is present
+	if(input[input.length()-1] == '\n'){
+		input.erase(input.length() - 1);
+	}
 	
 	//Remove carriage return if it is present
 	if(input[input.length()-1] == '\r'){
@@ -145,4 +158,27 @@ void parse_input(string input){
 	} else {
 		say(input);
 	}
+}
+
+string rainbow(string input){
+	string product = "";
+	int c = 0;
+	for(int i = 0; i < input.length(); i++){
+		switch(i % 5){
+			case 0:
+				product += RED; break;
+			case 1:
+				product += YELLOW; break;
+			case 2:
+				product += GREEN; break;
+			case 3:
+				product += BLUE; break;
+			case 4:
+				product += MAGENTA; break;
+		}
+		c++;
+		product += input[i];
+	}
+	product += RESET;
+	return product;
 }
