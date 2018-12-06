@@ -46,8 +46,22 @@ int main(int argc, char *argv[]){
 
 void help(){
 	cout << MAGENTA << "[HELP] Displaying help information" << RESET << "\n"; //TEMPORARY
-	//TODO
 	
+	string command_color = GREEN;
+	string argument_color = YELLOW;
+	string info_color = WHITE;
+	
+	string output = "";
+	output += command_color + "\\JOIN " + argument_color + "{your nickname} {room name}"
+			+ info_color + "\n\tJoins a room as the specified nickname.\n";
+	output += command_color + "\\ROOMS" + info_color + "\n\tDisplays a list of all open rooms.\n";
+	output += command_color + "\\WHO" + info_color + "\n\tDisplays a list of all users in the room.\n";
+	output += command_color + "\\HELP" + info_color + "\n\tDisplays a list of all commands.\n";	
+	output += command_color + "\\" + argument_color + "{recipient's nickname} {private message}"
+			+ info_color + "\n\tSends the recipient a private message.\n";
+	output += command_color + "\\LEAVE" + info_color + "\n\tLeaves the current room.\n";
+	
+	cout << output; //TEMPORARY	
 }
 
 void who(){
