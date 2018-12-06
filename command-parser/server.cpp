@@ -96,16 +96,24 @@ void invalid_command(){
 
 */
 void parse_input(string input){
+	
+	//Remove carriage return if it is present
+	if(input[input.length()-1] == '\r'){
+		input.erase(input.length() - 1);
+	}
+	
+	//If input is command
 	if(input[0] == '\\'){
+		
 		if(input.substr(0, 5).compare("\\HELP") == 0){
 			help();
-		} else if(input.substr(0, 6).compare("\\ROOMS") == 0){
+		} else if(input.substr(0, 6).compare("\\ROOMS") == 0){ //HELP command
 			rooms();
-		} else if(input.substr(0, 4).compare("\\WHO") == 0){
+		} else if(input.substr(0, 4).compare("\\WHO") == 0){ //WHO command
 			who();
-		} else if(input.substr(0, 6).compare("\\LEAVE") == 0){
+		} else if(input.substr(0, 6).compare("\\LEAVE") == 0){ //LEAVE command
 			leave();
-		} else if(input.substr(0, 5).compare("\\JOIN") == 0){
+		} else if(input.substr(0, 5).compare("\\JOIN") == 0){ //JOIN Command
 			
 			// Find index of the space before second argument (index of first argument is 6)
 			int index_arg2 = input.find(' ', 6);
@@ -119,9 +127,9 @@ void parse_input(string input){
 			//Get arguments as substrings
 			string nickname = input.substr(6, index_arg2 - 6);
 			string room_name = input.substr(index_arg2 + 1, input.length() - index_arg2);			
-			
-			join(nickname, room_name);	
-		} else {
+	
+			join(nickname, room_name);
+		} else { //DIRECT MESSAGE command
 			int index_message_start = input.find(' ', 1);
 			if(index_message_start > 1){
 				string recipient = input.substr(1, index_message_start - 1);
@@ -132,6 +140,8 @@ void parse_input(string input){
 				invalid_command();
 			}
 		}
+		
+	//If input is not a command
 	} else {
 		say(input);
 	}
