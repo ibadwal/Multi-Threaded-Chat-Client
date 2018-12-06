@@ -65,11 +65,6 @@ void add_message(char *buf) {
   pthread_mutex_unlock(&lock);
 }
 
-// A wrapper around recv to simplify calls.
-int receive_message(int connfd, char *message) {
-  return recv(connfd, message, MAXLINE, 0);
-}
-
 // A wrapper around send to simplify calls.
 int send_message(int connfd, char *message) {
   return send(connfd, message, strlen(message), 0);
@@ -95,17 +90,9 @@ int send_list_message(int connfd) {
   return send_message(connfd, message);
 }
 
-void respond(int connfd){
-  size_t n;
-
-  // Holds the received message.
-  char message[MAXLINE];
-
-  while ((n = receive_message(connfd, message)) > 0) {
-    message[n] = '\0';  // null terminate message (for string operations)
-    printf("Server received message %s (%d bytes)\n", message, (int)n);
-    n = process_message(connfd, message);
-  }
+// A wrapper around recv to simplify calls.
+int receive_message(int connfd, char *message) {
+  return recv(connfd, message, MAXLINE, 0);
 }
 
 // Helper function to establish an open listening socket on given port.
@@ -156,8 +143,19 @@ int main(int argc, char **argv) {
   // The listening file descriptor.
   int listenfd = open_listenfd(port);
 
+  //create a hash map of rooms (Key = room name)
+  
+  //create the default room
+
+
   // The main server loop - runs forever...
   printf("Loop starting\n");
+
+  /*
+  struct room{
+  std::vector<user> user_list;  //list of all users within this room
+  char room_pass[16];           //add a room_pass
+};*/
   while (1){
     //file descriptor for the connection
     int *connfdp = (int*)(malloc(sizeof(int)));
@@ -219,9 +217,18 @@ void *thread(void *vargp) {
   // Free the incoming argument - allocated in the main thread.
   free(vargp);
 
+  //set up user struct
+  char message[16];
+  int n = receive_message(connfd, message);
+  message[n] = '\0';
+  user cur_user;
+  strcpy(cur_user.nickname, message);
+  //printf("%s\n", message);
+  printf("username: %s\n", cur_user.nickname);
+  //printf("Server received message %s (%d bytes)\n", cur_user.nickname, (int)n);
+  cur_user.connection_fd = connfd;
 
-  // Handle the echo client requests.
-  //echo(connfd);
+
 
   printf("client disconnected.\n");
   // Don't forget to close the connection!

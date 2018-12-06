@@ -52,7 +52,11 @@ def prompt_on_last(sock):
 
 def client():
     connection = connect()
-    sentence = prompt_on_last(connection)
+    nickname = ask("What is your username?")
+    while len(nickname) > 16:
+      nickname = ask("Your username must be less than 17 characters. Choose another:")
+    print("nickname: " + nickname)
+    send(connection, nickname)
 
     while sentence != 'quit':
         send(connection, sentence)
