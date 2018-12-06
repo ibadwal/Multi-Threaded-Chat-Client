@@ -66,10 +66,18 @@ void join(string nickname, string room_name){
 }
 
 void say(string message){
-	cout << YELLOW << "User said: " << RESET << message << "\n"; //TEMPORARY
+	cout << YELLOW << "[PUBLIC] User said: " << RESET << message << "\n"; //TEMPORARY
 	//TODO
 	
 }
+
+void direct_message(string recipient, string message){
+	cout << YELLOW << "[DM] User messaged " << RESET << message
+		<< YELLOW << ": " << RESET << recipient << "\n"; //TEMPORARY
+	//TODO
+	
+}
+
 
 void invalid_command(){
 	cout << RED << "ERROR: Invalid command." << RESET << "\n"; //TEMPORARY
@@ -114,7 +122,15 @@ void parse_input(string input){
 			
 			join(nickname, room_name);	
 		} else {
-			invalid_command();
+			int index_message_start = input.find(' ', 1);
+			if(index_message_start > 1){
+				string recipient = input.substr(1, index_message_start - 1);
+				string message = input.substr(index_message_start + 1,
+								input.length() - index_message_start);
+				direct_message(message, recipient);
+			} else {
+				invalid_command();
+			}
 		}
 	} else {
 		say(input);
