@@ -4,6 +4,9 @@
 #include <iostream>
 #include <fstream>
 
+// compile and run with
+// g++ server.cpp -o server; ./server client_commands.txt
+
 using namespace std;
 
 void parse_input(string);
