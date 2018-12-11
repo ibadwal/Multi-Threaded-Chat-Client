@@ -1,7 +1,7 @@
 from socket import *
 import threading
 import sys
-from cconsole import print_string, set_input_function, _quit
+from cconsole import print_string, set_input_function, alive
 
 SERVER_NAME = 'localhost'
 SERVER_PORT = 8000
@@ -42,24 +42,51 @@ def last_list(sock):
 	else:
 		return xs[-1]
 
-def client():	
+connected = False
+connection = None
+		
+def client():
+	global connected
+	global connection
+	
 	def console_input(input_string):
-		if input_string == "quit":
-			pass#sys.exit(0)
-		else:
+		global connected
+		global connection
+	
+		if connected:
 			send(connection, input_string)
+		else:
+			try:
+				connection = connect()
+				connected = True
+			except:
+				print_string("Server is not online, press Enter to reconnect.")
 	
 	def console_output():
-		while(not _quit):
+		global connected
+		global connection
+	
+		while(alive()):
 			try:
 				response = recv(connection)
-				print_string(response)
+				if response != "":
+					print_string(response)
+				else:
+					if connected:
+						connected = False
+						print_string("Server died! Press Enter to reconnect.")
 			except:
 				pass
+		print()
 		sys.exit(0)
 	
 	set_input_function(console_input)
-	connection = connect()
+	
+	try:
+		connection = connect()
+		connected = True
+	except:
+		print_string("Server is not online, press Enter to reconnect.")	
 	
 	reply_thread = threading.Thread(target=console_output)
 	reply_thread.start()
