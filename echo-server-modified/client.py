@@ -1,5 +1,4 @@
 from socket import *
-import threading
 
 SERVER_NAME = 'localhost'
 SERVER_PORT = 3000
@@ -50,28 +49,16 @@ def prompt_on_last(sock):
     else:
         return ask(last)
 
-#thread function for reading data from the server
-def read_thread():
-  response = recv(connection)
-
-#thread function for writing data to the server
-def write_thread():
-  while sentence != 'quit':
-    send(connection, sentence)
-    response = recv(connection)
-    print(response.strip())
-    sentence = prompt_on_last(connection)
 
 def client():
     connection = connect()
-    
-    #set up and send nickname data to the server
-    nickname = ask("What is your username?")
-    while len(nickname) > 16:
-      nickname = ask("Your username must be less than 17 characters. Choose another:")
-    print("nickname: " + nickname)
-    send(connection, nickname)
+    sentence = prompt_on_last(connection)
 
-    #set up the threads
+    while sentence != 'quit':
+        send(connection, sentence)
+        response = recv(connection)
+        print(response.strip())
+        sentence = prompt_on_last(connection)
+
 
 client()

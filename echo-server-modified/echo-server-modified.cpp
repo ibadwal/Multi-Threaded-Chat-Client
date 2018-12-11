@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <algorithm>
 
 #include <vector>
 
@@ -26,7 +27,7 @@ struct user{
 
 //create a struct to represent a chat room
 struct room{
-  std::vector<user> user_list;  //list of all users within this room
+  std::vector<user*> user_list;  //list of all users within this room
   char room_pass[16];           //add a room_pass
 };
 
@@ -41,7 +42,7 @@ typedef struct sockaddr SA;
 #define LISTENQ 1024
 
 //initialize a vector of rooms that will be used as chat rooms
-std::vector<room> room_list;
+std::vector<room*> room_list;
 
 // We will use this as a simple circular buffer of incoming messages.
 char message_buf[20][50];
@@ -91,7 +92,7 @@ int send_list_message(int connfd) {
   // bytes are sent out on the wire. Otherwise it will wait for further
   // output bytes.
   strcat(message, "\n\0");
-  printf("Sending: %s", message);
+  printf("Sending: %s\n", message);
 
   return send_message(connfd, message);
 }
@@ -150,9 +151,9 @@ int main(int argc, char **argv) {
   int listenfd = open_listenfd(port);
 
   //create the default room
-  //room new_room;
+  room default_room;
   //add the room to the list of rooms
-  //room_list.push_back(&new_room);
+  room_list.push_back(&default_room);
 
   // The main server loop - runs forever...
   printf("Loop starting\n");
@@ -175,12 +176,104 @@ int main(int argc, char **argv) {
     // Create a new thread to handle the connection.
     pthread_t tid;
     pthread_create(&tid, NULL, thread, connfdp);
-  }
+    }
   printf("Server ending\n");
 }
 
+
+//method to send messages to all users within a room
+void send_message_to_room(int connfd, char* message, user* cur_user){
+  printf("BEGINNING OF send_message_to_room\n");
+  //get the room the user is in
+  room* users_room = cur_user->cur_room;
+  //get the user list within this room
+  std::vector<user*> users = users_room->user_list;
+  //send the message to each user in this room
+  printf("users size: %d\n", users.size());
+  for(std::vector<user*>::iterator it = users.begin(); it != users.end(); it++){
+    //get this users connection file descriptor
+    printf("SENDINGSENDINGSENDINGSENDINGSENDINGSENDINGSENDINGSENDINGSENDINGSENDINGSENDING\n");
+    int cur_fd = (*it)->connection_fd;
+    printf("User nickname: %s\n", (*it)->nickname);
+    char temp_buf[MAXLINE];
+    sprintf(temp_buf, "%s: %s", cur_user->nickname, message);
+    send(cur_fd, temp_buf, strlen(temp_buf), 0);
+  }
+}
+
+//method for threads to execute, loop for getting/sending messages
+void handle_messages(int connfd, user* cur_user){
+  printf("IN HANDLE_MESSAGES\n");
+  size_t n;
+
+  // Holds the received message.
+  char message[MAXLINE];
+
+  while ((n = receive_message(connfd, message)) > 0) {
+    printf("RECEIVED MESSAGE STARTING\n");
+    message[n] = '\0';  // null terminate message (for string operations)
+    printf("Server received message %s (%d bytes)\n", message, (int)n);
+    //add the current message to the circular buffer
+    add_message(message);
+
+    //send message to all users in the room of the user
+    send_message_to_room(connfd, message, cur_user);
+    //send(connfd, message, strlen(message), 0);
+  }
+}
+
+
+
+
+/*
+// Destructively modify string to be upper case
+void upper_case(char *s) {
+  while (*s) {
+    *s = toupper(*s);
+    s++;
+  }
+}
+
+int send_echo_message(int connfd, char *message) {
+  upper_case(message);
+  add_message(message);
+  return send_message(connfd, message);
+}
+
+int process_message(int connfd, char *message) {
+  if (is_list_message(message)) {
+    printf("Server responding with list response.\n");
+    return send_list_message(connfd);
+  } else {
+    printf("Server responding with echo response.\n");
+    return send_echo_message(connfd, message);
+  }
+}
+
+// The main function that each thread will execute.
+void echo(int connfd) {
+  size_t n;
+
+  // Holds the received message.
+  char message[MAXLINE];
+
+  while ((n = receive_message(connfd, message)) > 0) {
+    message[n] = '\0';  // null terminate message (for string operations)
+    printf("Server received message %s (%d bytes)\n", message, (int)n);
+    n = process_message(connfd, message);
+  }
+}*/
+
+
+
+
+
+
+
+
 /* thread routine */
 void *thread(void *vargp) {
+  printf("THREADTHREADTHREADTHREADTHREADTHREADTHREADTHREADTHREADTHREAD\n");
   // Grab the connection file descriptor.
   int connfd = *((int *)vargp);
   // Detach the thread to self reap.
@@ -198,8 +291,30 @@ void *thread(void *vargp) {
   printf("username: %s\n", cur_user.nickname);
   //printf("Server received message %s (%d bytes)\n", cur_user.nickname, (int)n);
   cur_user.connection_fd = connfd;
+  //assign the user the default room and add them to the list of users within that room
+  cur_user.cur_room = room_list.front();
+  ((room_list.front())->user_list).push_back(&cur_user);
 
-
+  handle_messages(connfd, &cur_user);
+  //echo(connfd);
+  //delete the user from the room it is in
+  //find the position of the user's room in the room list
+  room* users_cur_room = cur_user.cur_room;
+  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+  std::vector<room*>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), users_cur_room);
+  //check to see if we found the room where the user is in
+  if (room_list_pos != room_list.end()){
+    printf("USER'S ROOM FOUND AT POSITION:\n");
+    //delete the user from the user_list in the room
+    std::vector<user*>::iterator room_user_list_pos = std::find((users_cur_room->user_list).begin(), (users_cur_room->user_list).end(), &cur_user);
+    //check to see if we found the user in this room's user list
+    if (room_user_list_pos != (users_cur_room->user_list).end()){
+      printf("USER FOUND AT POSITION:\n");
+      //delete the user from this room's user list
+      (users_cur_room->user_list).erase(room_user_list_pos);
+    }
+  }
+  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
 
   printf("client disconnected.\n");
   // Don't forget to close the connection!
