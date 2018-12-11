@@ -20,6 +20,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -45,6 +46,10 @@ struct user {
 	string nickname;					//nickname of a user
 	int connection_fd;					//socket connection between server and user
 	room* curr_room;						 //the current room the user is in
+
+	bool operator==(const user& incoming_user) const {
+		return (nickname.compare(incoming_user.nickname) == 0);
+	}
 };
 
 //create a struct to represent a chat room
@@ -52,6 +57,10 @@ struct room {
 	string id; 						//ID of the room
 	std::vector<user> user_list;	//list of all users within this room
 	char room_pass[16];				//add a room_pass
+
+	bool operator==(const room& incoming_room) const {
+		return (id.compare(incoming_room.id) == 0);
+	}
 };
 
 void parse_input(user*, string);
@@ -293,10 +302,30 @@ void rooms(user* sender){
 }
 
 void leave(user* sender){
-	cout << MAGENTA << "[LEAVE] Leaving room" << RESET << "\n"; //TEMPORARY
-	
+	//cout << MAGENTA << "[LEAVE] Leaving room" << RESET << "\n"; //TEMPORARY
+	cout << (*sender).nickname << endl;
 	//TODO: remove the current user from current room and send them "GOODBYE"
-	
+	room* users_cur_room = sender->curr_room;
+  //cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
+  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+  std::vector<room>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), *users_cur_room);
+  //check to see if we found the room where the user is in
+  if (room_list_pos != room_list.end()){
+    printf("USER'S ROOM FOUND\n");
+    //delete the user from the user_list in the room
+    std::vector<user>::iterator room_user_list_pos = std::find((users_cur_room->user_list).begin(), (users_cur_room->user_list).end(), *sender);
+    //check to see if we found the user in this room's user list
+    if (room_user_list_pos != (users_cur_room->user_list).end()){
+      printf("USER FOUND\n");
+      //delete the user from this room's user list
+      (users_cur_room->user_list).erase(room_user_list_pos);
+    }
+  }
+  (*sender).curr_room = NULL;
+  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+  send_string(sender, "Goodbye! Leaving current room.");
+  //cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
+  printf("END OF LEAVE\n");
 }
 
 void join(user* sender, string nickname, string room_name){
@@ -304,6 +333,8 @@ void join(user* sender, string nickname, string room_name){
 		<< " as " << RESET << nickname << "\n"; //TEMPORARY	
 	
 	//TODO check if user is already in a room and remove them if they are
+		//check if they are in one
+		//leave(sender)
 	
 	if(nickname.length() > 0 and nickname.length() <= 16){
 		bool found_room = false;
@@ -406,7 +437,6 @@ void parse_input(user* sender, string input){
 			//Get arguments as substrings
 			string nickname = input.substr(6, index_arg2 - 6);
 			string room_name = input.substr(index_arg2 + 1, input.length() - index_arg2);			
-	
 			join(sender, nickname, room_name);
 		} else { //DIRECT MESSAGE command
 			int index_message_start = input.find(' ', 1);
