@@ -230,7 +230,7 @@ void *thread(void *vargp) {
 	pthread_detach(pthread_self());
 	// Free the incoming argument - allocated in the main thread.
 	free(vargp);
-	printf("AYYYYYYY\n");	
+	
 	user u;		
 	user* curr_user = &u;
 	curr_user->connection_fd = connfd;
@@ -281,24 +281,42 @@ void help(user* sender){
 
 void who(user* sender){
 	cout << MAGENTA << "[WHO] Displaying all users in the room" << RESET << "\n"; //TEMPORARY
-	
-	//TODO: get list of users and send it to current use	
-	
+		
+		//TODO: get list of users and send it to current user
+		string output;
+		if(sender->curr_room == NULL){
+			output = RED;
+			output += "ERROR: you have not joined a room!";
+			output += RESET;
+			send_string(sender, output);
+			return;
+		}
+		std::vector<user> curusers = (sender->curr_room)->user_list;
+		output = GREEN;
+		output += "Users in " + (sender->curr_room)->id + ": ";
+		output += YELLOW;
+		for(vector<user>::iterator i = curusers.begin(); i!= curusers.end(); i++){
+			output += i->nickname + ", ";
+		}
+		output.erase(output.size()-2, output.size());
+		output += RESET;
+		send_string(sender, output);
 }
 
 void rooms(user* sender){
 	cout << MAGENTA << "[ROOMS] Listing rooms" << RESET << "\n"; //TEMPORARY
-	string output = GREEN;
-	if(room_list.size() == 0){
-		output += "There are no active rooms. Use \\JOIN to create one!";
-	} else {
-		output += "Active Rooms: " + YELLOW;
-		for(vector<room>::iterator i = room_list.begin(); i != room_list.end(); i++){
-			output += i->id;
-		}		
-	}
-	output += RESET;
-	send_string(sender, output);
+		string output = GREEN;
+		if(room_list.size() == 0){
+			output += "There are no active rooms. Use \\JOIN to create one!";
+		} else {
+			output += "Active Rooms: " + YELLOW;
+			for(vector<room>::iterator i = room_list.begin(); i != room_list.end(); i++){
+					output += i->id + ", ";
+			}
+			output.erase(output.size()-2, output.size());		
+		}
+		output += RESET;
+		send_string(sender, output);
 }
 
 void leave(user* sender){
@@ -306,26 +324,26 @@ void leave(user* sender){
 	cout << (*sender).nickname << endl;
 	//TODO: remove the current user from current room and send them "GOODBYE"
 	room* users_cur_room = sender->curr_room;
-  //cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
-  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
-  std::vector<room>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), *users_cur_room);
-  //check to see if we found the room where the user is in
-  if (room_list_pos != room_list.end()){
-    printf("USER'S ROOM FOUND\n");
-    //delete the user from the user_list in the room
-    std::vector<user>::iterator room_user_list_pos = std::find((users_cur_room->user_list).begin(), (users_cur_room->user_list).end(), *sender);
-    //check to see if we found the user in this room's user list
-    if (room_user_list_pos != (users_cur_room->user_list).end()){
-      printf("USER FOUND\n");
-      //delete the user from this room's user list
-      (users_cur_room->user_list).erase(room_user_list_pos);
-    }
-  }
-  (*sender).curr_room = NULL;
-  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
-  send_string(sender, "Goodbye! Leaving current room.");
-  //cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
-  printf("END OF LEAVE\n");
+	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
+	printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+	std::vector<room>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), *users_cur_room);
+	//check to see if we found the room where the user is in
+	if (room_list_pos != room_list.end()){
+		printf("USER'S ROOM FOUND\n");
+		//delete the user from the user_list in the room
+		std::vector<user>::iterator room_user_list_pos = std::find((users_cur_room->user_list).begin(), (users_cur_room->user_list).end(), *sender);
+		//check to see if we found the user in this room's user list
+		if (room_user_list_pos != (users_cur_room->user_list).end()){
+			printf("USER FOUND\n");
+			//delete the user from this room's user list
+			(users_cur_room->user_list).erase(room_user_list_pos);
+		}
+	}
+	(*sender).curr_room = NULL;
+	printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+	send_string(sender, "Goodbye! Leaving current room.");
+	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
+	printf("END OF LEAVE\n");
 }
 
 void join(user* sender, string nickname, string room_name){
@@ -366,7 +384,7 @@ void say(user* sender, string message){
 		send_string(sender, RED + "ERROR: You have not joined a room!" + RESET);
 	} else {
 		//TODO send the message to everyone in the room
-		string output = YELLOW + sender->nickname + ">" + WHITE + message + RESET;
+		string output = YELLOW + sender->nickname + "> " + WHITE + message + RESET;
 		broadcast(sender->curr_room, output);
 	}	
 }
@@ -377,12 +395,29 @@ void broadcast(room* rm, string message){
 	}
 }
 
-void direct_message(user* sender, string recipient, string message){
+void direct_message(user* sender, string message, string recipient){
 	cout << YELLOW << "[DM] User messaged " << RESET << message
 		<< YELLOW << ": " << RESET << recipient << "\n"; //TEMPORARY
 	
-	//TODO: send the recipient and the current user the message
+	if(sender->nickname.compare(recipient) == 0){
+		send_string(sender, RED + "ERROR: You cannot whisper to yourself!" + RESET);
+		return;
+	}
 	
+	user* u_recipient = NULL;
+	for(vector<user>::iterator u = (sender->curr_room)->user_list.begin();
+	u != (sender->curr_room)->user_list.end(); u++){
+		if(u->nickname.compare(recipient) == 0){			
+			u_recipient = &(*u);
+		}
+	}
+	
+	if(u_recipient != NULL){
+		send_string(u_recipient, YELLOW + sender->nickname + GRAY + " whispered to you: " + WHITE + message + RESET);
+		send_string(sender, GRAY + "You whispered to " + YELLOW + u_recipient->nickname + GRAY + ": " + WHITE + message + RESET);
+	} else {
+		send_string(sender, RED + "ERROR: That user is not in this room!" + RESET);
+	}
 }
 
 void invalid_command(user* sender){
