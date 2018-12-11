@@ -4,6 +4,9 @@
 #include <iostream>
 #include <fstream>
 
+// compile and run with
+// g++ server.cpp -o server; ./server client_commands.txt
+
 using namespace std;
 
 void parse_input(string);
@@ -62,49 +65,58 @@ void help(){
 	output += command_color + "\\LEAVE" + info_color + "\n\tLeaves the current room.\n";
 	
 	cout << output; //TEMPORARY	
+	
+	//TODO: send "output" to current user
 }
 
 void who(){
 	cout << MAGENTA << "[WHO] Displaying all users in the room" << RESET << "\n"; //TEMPORARY
-	//TODO
+	
+	//TODO: get list of users and send it to current use	
 	
 }
 
 void rooms(){
 	cout << MAGENTA << "[ROOMS] Listing rooms" << RESET << "\n"; //TEMPORARY
-	//TODO
+	
+	//TODO: get list of rooms and send it to current user
 	
 }
 
 void leave(){
 	cout << MAGENTA << "[LEAVE] Leaving room" << RESET << "\n"; //TEMPORARY
-	//TODO
+	
+	//TODO: remove the current user from current room and send them "GOODBYE"
 	
 }
 
 void join(string nickname, string room_name){
 	cout << MAGENTA << "[JOIN] Joining room " << RESET << room_name << MAGENTA 
 		<< " as " << RESET << nickname << "\n"; //TEMPORARY	
-	//TODO
+
+	//TODO: add the current user to the specified room
 	
 }
 
 void say(string message){
 	cout << YELLOW << "[PUBLIC] User said: " << RESET << message << "\n"; //TEMPORARY
-	//TODO
+	
+	//TODO: send the message to the current room witht the current user's name attatched
 	
 }
 
 void direct_message(string recipient, string message){
 	cout << YELLOW << "[DM] User messaged " << RESET << message
 		<< YELLOW << ": " << RESET << recipient << "\n"; //TEMPORARY
-	//TODO
+	
+	//TODO: send the recipient and the current user the message
 	
 }
 
 void invalid_command(){
 	cout << RED << "ERROR: Invalid command." << RESET << "\n"; //TEMPORARY
-	//TODO
+	
+	//TODO: send the current user a message alerting them of the invalid command
 	
 }
 
