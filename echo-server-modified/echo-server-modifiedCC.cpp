@@ -54,7 +54,7 @@ struct room {
 	char room_pass[16];				//add a room_pass
 };
 
-void parse_input(user, string);
+void parse_input(user*, string);
 string rainbow(string);
 
 /* Simplifies calls to bind(), connect(), and accept() */
@@ -103,8 +103,8 @@ int send_message(int connfd, char *message) {
 }
 
 // A wrapper for sending c++ strings
-int send_string(user recipient, string message) {
-	return send_message(recipient.connection_fd, (char*)message.c_str());
+int send_string(user* recipient, string message) {
+	return send_message(recipient->connection_fd, (char*)message.c_str());
 }
 
 // A predicate function to test incoming message.
@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
 	
 	// The main server loop - runs forever...
 	printf("Loop starting\n");
-	while (1){
+	while (1){		
 		//file descriptor for the connection
 		int *connfdp = (int*)(malloc(sizeof(int)));
 		//client IP info variable
@@ -206,12 +206,12 @@ int main(int argc, char **argv) {
 		printf("server connected to %s (%s), port %u\n", hp->h_name, haddrp, client_port);
 		// Create a new thread to handle the connection.
 		pthread_t tid;
-		pthread_create(&tid, NULL, thread, connfdp);
+		pthread_create(&tid, NULL, thread, connfdp);	
 	}
 	printf("Server ending\n");
 }
 
-void broadcast(room, string);
+void broadcast(room*, string);
 
 /* thread routine */
 void *thread(void *vargp) {
@@ -221,15 +221,15 @@ void *thread(void *vargp) {
 	pthread_detach(pthread_self());
 	// Free the incoming argument - allocated in the main thread.
 	free(vargp);
-	
-	user* curr_user;		
+	printf("AYYYYYYY\n");	
+	user u;		
+	user* curr_user = &u;
 	curr_user->connection_fd = connfd;
 	curr_user->curr_room = NULL;
 	
 	send_string(curr_user, "Connected to the Chat Server. Type \\HELP for commands.");
 	
 	while(true){
-		printf("%i\n", curr_user.curr_room);
 		char message[128];
 		int n = receive_message(connfd, message);
 		message[n] = '\0';			
@@ -312,7 +312,7 @@ void join(user* sender, string nickname, string room_name){
 				found_room = true;
 				//TODO check if nickname exists in room already
 				sender->nickname = nickname;
-				i->user_list.push_back(sender);
+				i->user_list.push_back(*sender);
 				sender->curr_room = &(*i);
 				//printf("%i\n", sender.curr_room);
 				string output = YELLOW + sender->nickname + GRAY + " joined the room." + RESET;
@@ -331,22 +331,22 @@ void join(user* sender, string nickname, string room_name){
 void say(user* sender, string message){
 	cout << YELLOW << "[PUBLIC] User said: " << RESET << message << "\n"; //TEMPORARY
 	
-	if(sender.curr_room == NULL){
+	if(sender->curr_room == NULL){
 		send_string(sender, RED + "ERROR: You have not joined a room!" + RESET);
 	} else {
 		//TODO send the message to everyone in the room
-		string output = YELLOW + sender.nickname + ">" + WHITE + message + RESET;
-		broadcast(*sender.curr_room, output);
+		string output = YELLOW + sender->nickname + ">" + WHITE + message + RESET;
+		broadcast(sender->curr_room, output);
 	}	
 }
 
 void broadcast(room* rm, string message){
-	for(vector<user>::iterator u = rm.user_list.begin(); u != rm.user_list.end(); u++){
-		send_string(*u, message);
+	for(vector<user>::iterator u = rm->user_list.begin(); u != rm->user_list.end(); u++){
+		send_string(&(*u), message);
 	}
 }
 
-void direct_message(user sender, string recipient, string message){
+void direct_message(user* sender, string recipient, string message){
 	cout << YELLOW << "[DM] User messaged " << RESET << message
 		<< YELLOW << ": " << RESET << recipient << "\n"; //TEMPORARY
 	
@@ -354,7 +354,7 @@ void direct_message(user sender, string recipient, string message){
 	
 }
 
-void invalid_command(user sender){
+void invalid_command(user* sender){
 	string output = "";
 	output += RED + "ERROR: Invalid command." + RESET;
 	send_string(sender, output);
@@ -369,7 +369,7 @@ void invalid_command(user sender){
 	TODO:
 		- Adding extra arguments does not always cause an error
 */
-void parse_input(user sender, string input){
+void parse_input(user* sender, string input){
 	
 	//Removes newline if it is present
 	if(input[input.length()-1] == '\n'){
