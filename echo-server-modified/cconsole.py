@@ -78,8 +78,6 @@ def t_input():
 			continue
 		if '\r' in c:
 			if input_string == "quit":
-				if input_function != None:
-					input_function("quit")
 				quit()
 				return
 	
@@ -104,8 +102,10 @@ print_string("")
 input_thread = threading.Thread(target=t_input)
 input_thread.start()
 
+def alive():
+	return input_thread.is_alive()
+
 def quit():
 	_quit = True
-	#input_thread.join()
 	sys.stdout.write("\n\n\n")
 	sys.exit()
