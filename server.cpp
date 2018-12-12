@@ -335,11 +335,15 @@ void leave(user* sender){
 		if (room_user_list_pos != (users_cur_room->user_list).end()){
 			//delete the user from this room's user list
 			(users_cur_room->user_list).erase(room_user_list_pos);
+			
+			string output = YELLOW + sender->nickname + GRAY + " left the room." + RESET;
+			broadcast(users_cur_room, output);
 		}
 	}
 	(*sender).curr_room = NULL;
 	printf("users_cur_room's user list size: %d\n", (int)((users_cur_room)->user_list).size());
 	send_string(sender, "Goodbye! Leaving current room.");
+	
 	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
 }
 
@@ -392,14 +396,11 @@ void join(user* sender, string nickname, string room_name){
 		}
 		//if we didn't find this room, create it
 		if (found_room == false){
-			printf("creating room\n");
+			printf("creating new room\n");
 			//room* new_room = (room*) malloc(sizeof(room));
-			room* new_room = new room();
-			printf("1\n");
-			new_room->id = room_name;
-			printf("2\n");
+			room* new_room = new room();			
+			new_room->id = room_name;			
 			room_list.push_back(*new_room);
-			printf("room created\n");
 			join(sender, nickname, room_name);
 		}
 	} else {
