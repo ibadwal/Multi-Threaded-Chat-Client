@@ -3,7 +3,7 @@
  * and a message buffer.
  
  compile with:
- g++ echo-server-modifiedCC.cpp -o server -lpthread
+ g++ server.cpp -o server -lpthread
  
  */
 #include <arpa/inet.h>
@@ -392,7 +392,10 @@ void join(user* sender, string nickname, string room_name){
 		}
 		//if we didn't find this room, create it
 		if (found_room == false){
-			//TODO create another room if the user's inputted room_name didn't match any existing rooms
+			room* new_room = (room*) malloc(sizeof(room));
+			new_room->id = room_name;
+			room_list.push_back(*new_room);
+			join(sender, nickname, room_name);
 		}
 	} else {
 		string output = "";
@@ -407,7 +410,6 @@ void say(user* sender, string message){
 	if(sender->curr_room == NULL){
 		send_string(sender, RED + "ERROR: You have not joined a room!" + RESET);
 	} else {
-		//TODO send the message to everyone in the room
 		string output = YELLOW + sender->nickname + "> " + WHITE + message + RESET;
 		broadcast(sender->curr_room, output);
 	}	
