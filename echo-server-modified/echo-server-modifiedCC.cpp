@@ -317,6 +317,8 @@ void leave(user* sender){
     //check to see if we found the user in this room's user list
     if (room_user_list_pos != (users_cur_room->user_list).end()){
       printf("USER FOUND\n");
+      string a = (room_user_list_pos)->nickname;
+      cout << "NICKNAME TESTING: " << a << endl;
       //delete the user from this room's user list
       (users_cur_room->user_list).erase(room_user_list_pos);
     }
