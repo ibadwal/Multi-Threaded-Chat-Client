@@ -1,0 +1,31 @@
+\HELP
+~1
+\ROOMS
+~1
+\JOIN danny-m fun-room assdasda
+~1
+\JOIN  fun-room
+~1
+\JOIN danny-m
+~1
+\JOIN  
+~1
+\JOIN danny-m fun-room
+~1
+hey guys what's up
+~1
+\WHO
+~1
+where is everyone
+~1
+\sam-f yo sam what's up
+~1
+\
+~1
+\ a
+~1
+\  
+~1
+\LAEVE
+~1
+\LEAVE

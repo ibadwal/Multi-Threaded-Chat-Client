@@ -1,0 +1,11 @@
+\JOIN robocop robots-only
+~1
+hey everyone, robocop here!
+~1
+\danny hey, this room is for robots only!
+~3
+guys, danny is not a robot!
+~1
+\LAEVE
+~1
+\LEAVE

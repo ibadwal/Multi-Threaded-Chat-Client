@@ -293,7 +293,7 @@ void who(user* sender){
 		}
 		std::vector<user> curusers = (sender->curr_room)->user_list;
 		output = GREEN;
-		output += "Users in " + (sender->curr_room)->id + ": ";
+		output += "Users in " + YELLOW + (sender->curr_room)->id + GREEN + ": ";
 		output += YELLOW;
 		for(vector<user>::iterator i = curusers.begin(); i!= curusers.end(); i++){
 			output += i->nickname + ", ";
@@ -392,9 +392,14 @@ void join(user* sender, string nickname, string room_name){
 		}
 		//if we didn't find this room, create it
 		if (found_room == false){
-			room* new_room = (room*) malloc(sizeof(room));
+			printf("creating room\n");
+			//room* new_room = (room*) malloc(sizeof(room));
+			room* new_room = new room();
+			printf("1\n");
 			new_room->id = room_name;
+			printf("2\n");
 			room_list.push_back(*new_room);
+			printf("room created\n");
 			join(sender, nickname, room_name);
 		}
 	} else {
