@@ -324,29 +324,6 @@ void leave(user* sender){
 	cout << (*sender).nickname << endl;
 	//TODO: remove the current user from current room and send them "GOODBYE"
 	room* users_cur_room = sender->curr_room;
-<<<<<<< HEAD
-  //cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
-  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
-  std::vector<room>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), *users_cur_room);
-  //check to see if we found the room where the user is in
-  if (room_list_pos != room_list.end()){
-    printf("USER'S ROOM FOUND\n");
-    //delete the user from the user_list in the room
-    std::vector<user>::iterator room_user_list_pos = std::find((users_cur_room->user_list).begin(), (users_cur_room->user_list).end(), *sender);
-    //check to see if we found the user in this room's user list
-    if (room_user_list_pos != (users_cur_room->user_list).end()){
-      printf("USER FOUND\n");
-      string a = (room_user_list_pos)->nickname;
-      cout << "NICKNAME TESTING: " << a << endl;
-      //delete the user from this room's user list
-      (users_cur_room->user_list).erase(room_user_list_pos);
-    }
-  }
-  (*sender).curr_room = NULL;
-  printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
-  send_string(sender, "Goodbye! Leaving current room.");
-  //cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
-  printf("END OF LEAVE\n");
 	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
 	printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
 	std::vector<room>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), *users_cur_room);
