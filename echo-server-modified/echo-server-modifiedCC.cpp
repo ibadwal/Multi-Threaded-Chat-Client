@@ -320,61 +320,85 @@ void rooms(user* sender){
 }
 
 void leave(user* sender){
-	//cout << MAGENTA << "[LEAVE] Leaving room" << RESET << "\n"; //TEMPORARY
-	cout << (*sender).nickname << endl;
+	cout << MAGENTA << "[LEAVE] Leaving room" << RESET << "\n"; //TEMPORARY
+	//cout << (*sender).nickname << endl;
 	//TODO: remove the current user from current room and send them "GOODBYE"
 	room* users_cur_room = sender->curr_room;
 	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
-	printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+	printf("users_cur_room's user list size: %d\n", (int)((users_cur_room)->user_list).size());
 	std::vector<room>::iterator room_list_pos = std::find(room_list.begin(), room_list.end(), *users_cur_room);
 	//check to see if we found the room where the user is in
 	if (room_list_pos != room_list.end()){
-		printf("USER'S ROOM FOUND\n");
 		//delete the user from the user_list in the room
 		std::vector<user>::iterator room_user_list_pos = std::find((users_cur_room->user_list).begin(), (users_cur_room->user_list).end(), *sender);
 		//check to see if we found the user in this room's user list
 		if (room_user_list_pos != (users_cur_room->user_list).end()){
-			printf("USER FOUND\n");
 			//delete the user from this room's user list
 			(users_cur_room->user_list).erase(room_user_list_pos);
 		}
 	}
 	(*sender).curr_room = NULL;
-	printf("users_cur_room's user list size: %d\n", ((users_cur_room)->user_list).size());
+	printf("users_cur_room's user list size: %d\n", (int)((users_cur_room)->user_list).size());
 	send_string(sender, "Goodbye! Leaving current room.");
 	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
-	printf("END OF LEAVE\n");
 }
 
 void join(user* sender, string nickname, string room_name){
 	cout << MAGENTA << "[JOIN] Joining room " << RESET << room_name << MAGENTA 
 		<< " as " << RESET << nickname << "\n"; //TEMPORARY	
 	
-	//TODO check if user is already in a room and remove them if they are
-		//check if they are in one
-		//leave(sender)
+	//check if user is already in a room and remove them if they are
+	//first check if the user's room exists already (already in a room)
+	if (sender->curr_room != NULL){
+		//if they are in a room, we want them to leave that room
+		//reuse the leave(user* sender) function here:
+		//leave gets rid of user in the user's room and clears the user's room field
+		leave(sender);
+	}
 	
 	if(nickname.length() > 0 and nickname.length() <= 16){
 		bool found_room = false;
-		for(vector<room>::iterator i = room_list.begin(); i != room_list.end(); i++){
+		for(std::vector<room>::iterator i = room_list.begin(); i != room_list.end(); i++){
 			if(i->id.compare(room_name) == 0){				
 				found_room = true;
-				//TODO check if nickname exists in room already
-				sender->nickname = nickname;
-				i->user_list.push_back(*sender);
-				sender->curr_room = &(*i);
-				//printf("%i\n", sender.curr_room);
-				string output = YELLOW + sender->nickname + GRAY + " joined the room." + RESET;
-				broadcast(&(*i), output);
+				//check if nickname exists in room already
+				std::vector<user> temp_user_list = (&(*i))->user_list;
+				//std::vector<user>::iterator nickname_pos_in_room_list = std::find((i->user_list).begin(), (i->user_list).end(), *sender);
+				bool duplicate_name = false;
+				for (std::vector<user>::iterator j = temp_user_list.begin(); j != temp_user_list.end(); j++){
+					if (nickname.compare((&(*j))->nickname) == 0){
+						//cout << "DUPE" << endl;
+						duplicate_name = true;
+					}
+				}
+				//check to see if we found the user in this room's user list
+				if (duplicate_name == true){
+					cout << "User's nickname is in use already." << endl;
+					//tell the user that their nickname is already taken in this room - can't join this room
+					string output = "";
+					output += RED + "ERROR: Nickname is already in use within this room." + RESET;
+					send_string(sender, output);
+				}
+				//end of duplicate name check
+				else{
+					sender->nickname = nickname;
+					i->user_list.push_back(*sender);
+					sender->curr_room = &(*i);
+					//printf("%i\n", sender.curr_room);
+					string output = YELLOW + sender->nickname + GRAY + " joined the room." + RESET;
+					broadcast(&(*i), output);
+				}
 			}
-		}		
+		}
+		//if we didn't find this room, create it
+		if (found_room == false){
+			//TODO create another room if the user's inputted room_name didn't match any existing rooms
+		}
 	} else {
 		string output = "";
 		output += RED + "ERROR: Nickname must be at most 16 characters." + RESET;
 		send_string(sender, output);
 	}
-		
-	
 }
 
 void say(user* sender, string message){
