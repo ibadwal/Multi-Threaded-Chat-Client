@@ -63,7 +63,7 @@ def print_string(string):
 	global input_string	
 	sys.stdout.write('\r' + string)
 	
-	padding = " "*(len(input_string) + len(console_hint) - len(string))
+	padding = " "*(len(input_string) + len(console_hint))# - len(string))
 	
 	sys.stdout.write(padding)
 	sys.stdout.write("\n" + console_hint + input_string)

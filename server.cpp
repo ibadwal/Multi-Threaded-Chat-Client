@@ -189,9 +189,8 @@ int main(int argc, char **argv) {
 	// The listening file descriptor.
 	int listenfd = open_listenfd(port);
 
-	//TEMPORARY
 	room sonic_fan_club;
-	sonic_fan_club.id = "sonic";
+	sonic_fan_club.id = "general";
 	room_list.push_back(sonic_fan_club);
 
 	
@@ -221,6 +220,7 @@ int main(int argc, char **argv) {
 }
 
 void broadcast(room*, string);
+void leave(user*);
 
 /* thread routine */
 void *thread(void *vargp) {
@@ -249,6 +249,10 @@ void *thread(void *vargp) {
 		} else {			
 			break;
 		}
+	}
+	
+	if(curr_user->curr_room != NULL){
+		leave(curr_user);
 	}
 	
 	printf("client disconnected.\n");
