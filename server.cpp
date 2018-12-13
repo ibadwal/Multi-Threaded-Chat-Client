@@ -86,6 +86,7 @@ int msgi = 0;
 
 // A lock for the message buffer.
 pthread_mutex_t lock;
+pthread_mutex_t command_lock;
 
 // Initialize the message buffer to empty strings.
 void init_message_buf() {
@@ -183,6 +184,7 @@ int main(int argc, char **argv) {
 
 	// Initialize the message buffer lock.
 	pthread_mutex_init(&lock, NULL);
+	pthread_mutex_init(&command_lock, NULL);
 
 	// The port number for this server.
 	int port = atoi(argv[1]);
@@ -261,6 +263,7 @@ void *thread(void *vargp) {
 	return NULL;
 }
 
+//Generate a help string and send it to the user who requested it
 void help(user* sender){
 	cout << MAGENTA << "[HELP] Displaying help information" << RESET << "\n"; //TEMPORARY
 	
@@ -278,35 +281,35 @@ void help(user* sender){
 			+ info_color + "\n\tSends the recipient a private message.\n";
 	output += command_color + "\\LEAVE" + info_color + "\n\tLeaves the current room." + RESET;
 	
-	//cout << output; //TEMPORARY	
 	
 	send_string(sender, output);
 }
 
+//Display all users in the room
 void who(user* sender){
 	cout << MAGENTA << "[WHO] Displaying all users in the room" << RESET << "\n"; //TEMPORARY
-		
-		//TODO: get list of users and send it to current user
-		string output;
-		if(sender->curr_room == NULL){
-			output = RED;
-			output += "ERROR: you have not joined a room!";
-			output += RESET;
-			send_string(sender, output);
-			return;
-		}
-		std::vector<user> curusers = (sender->curr_room)->user_list;
-		output = GREEN;
-		output += "Users in " + YELLOW + (sender->curr_room)->id + GREEN + ": ";
-		output += YELLOW;
-		for(vector<user>::iterator i = curusers.begin(); i!= curusers.end(); i++){
-			output += i->nickname + ", ";
-		}
-		output.erase(output.size()-2, output.size());
+	
+	string output;
+	if(sender->curr_room == NULL){
+		output = RED;
+		output += "ERROR: You have not joined a room!";
 		output += RESET;
 		send_string(sender, output);
+		return;
+	}
+	std::vector<user> curusers = (sender->curr_room)->user_list;
+	output = GREEN;
+	output += "Users in " + YELLOW + (sender->curr_room)->id + GREEN + ": ";
+	output += YELLOW;
+	for(vector<user>::iterator i = curusers.begin(); i!= curusers.end(); i++){
+		output += i->nickname + ", ";
+	}
+	output.erase(output.size()-2, output.size());
+	output += RESET;
+	send_string(sender, output);
 }
 
+//Display all rooms
 void rooms(user* sender){
 	cout << MAGENTA << "[ROOMS] Listing rooms" << RESET << "\n"; //TEMPORARY
 		string output = GREEN;
@@ -323,10 +326,19 @@ void rooms(user* sender){
 		send_string(sender, output);
 }
 
+//Remove the user from their current room
 void leave(user* sender){
 	cout << MAGENTA << "[LEAVE] Leaving room" << RESET << "\n"; //TEMPORARY
 	//cout << (*sender).nickname << endl;
-	//TODO: remove the current user from current room and send them "GOODBYE"
+	
+	if(sender->curr_room == NULL){
+		string output = RED;
+		output += "ERROR: You have not joined a room!";
+		output += RESET;
+		send_string(sender, output);
+		return;
+	}
+	
 	room* users_cur_room = sender->curr_room;
 	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
 	printf("users_cur_room's user list size: %d\n", (int)((users_cur_room)->user_list).size());
@@ -338,19 +350,21 @@ void leave(user* sender){
 		//check to see if we found the user in this room's user list
 		if (room_user_list_pos != (users_cur_room->user_list).end()){
 			//delete the user from this room's user list
+			pthread_mutex_lock(&command_lock);
 			(users_cur_room->user_list).erase(room_user_list_pos);
-			
+			pthread_mutex_unlock(&command_lock);
 			string output = YELLOW + sender->nickname + GRAY + " left the room." + RESET;
 			broadcast(users_cur_room, output);
+			sender->curr_room = NULL;
 		}
-	}
-	(*sender).curr_room = NULL;
-	printf("users_cur_room's user list size: %d\n", (int)((users_cur_room)->user_list).size());
+	}	
+	//printf("users_cur_room's user list size: %d\n", (int)((users_cur_room)->user_list).size());
 	send_string(sender, "Goodbye! Leaving current room.");
 	
 	//cout << "room size: " << ((users_cur_room)->user_list).size() << endl;
 }
 
+//Add the user to their requested room, create one if it doesn't exist
 void join(user* sender, string nickname, string room_name){
 	cout << MAGENTA << "[JOIN] Joining room " << RESET << room_name << MAGENTA 
 		<< " as " << RESET << nickname << "\n"; //TEMPORARY	
@@ -389,10 +403,11 @@ void join(user* sender, string nickname, string room_name){
 				}
 				//end of duplicate name check
 				else{
-					sender->nickname = nickname;
+					pthread_mutex_lock(&command_lock);
+					sender->nickname = nickname;					
 					i->user_list.push_back(*sender);
-					sender->curr_room = &(*i);
-					//printf("%i\n", sender.curr_room);
+					sender->curr_room = &(*i);		
+					pthread_mutex_unlock(&command_lock);					
 					string output = YELLOW + sender->nickname + GRAY + " joined the room." + RESET;
 					broadcast(&(*i), output);
 				}
@@ -404,7 +419,9 @@ void join(user* sender, string nickname, string room_name){
 			//room* new_room = (room*) malloc(sizeof(room));
 			room* new_room = new room();			
 			new_room->id = room_name;			
+			pthread_mutex_lock(&command_lock);
 			room_list.push_back(*new_room);
+			pthread_mutex_unlock(&command_lock);
 			join(sender, nickname, room_name);
 		}
 	} else {
@@ -414,6 +431,7 @@ void join(user* sender, string nickname, string room_name){
 	}
 }
 
+//Send the user's message to everyone in the room
 void say(user* sender, string message){
 	cout << YELLOW << "[PUBLIC] User said: " << RESET << message << "\n"; //TEMPORARY
 	
@@ -425,21 +443,25 @@ void say(user* sender, string message){
 	}	
 }
 
+//Send a message to everyone in a room
 void broadcast(room* rm, string message){
 	for(vector<user>::iterator u = rm->user_list.begin(); u != rm->user_list.end(); u++){
 		send_string(&(*u), message);
 	}
 }
 
+//send a direct message from one user to another
 void direct_message(user* sender, string message, string recipient){
 	cout << YELLOW << "[DM] User messaged " << RESET << message
 		<< YELLOW << ": " << RESET << recipient << "\n"; //TEMPORARY
 	
+	// Check that the user is not messaging themselves
 	if(sender->nickname.compare(recipient) == 0){
 		send_string(sender, RED + "ERROR: You cannot whisper to yourself!" + RESET);
 		return;
 	}
 	
+	// Iterate through users in the room to find the recipient
 	user* u_recipient = NULL;
 	for(vector<user>::iterator u = (sender->curr_room)->user_list.begin();
 	u != (sender->curr_room)->user_list.end(); u++){
@@ -448,29 +470,25 @@ void direct_message(user* sender, string message, string recipient){
 		}
 	}
 	
+	// If we found the recipient in room
 	if(u_recipient != NULL){
 		send_string(u_recipient, YELLOW + sender->nickname + GRAY + " whispered to you: " + WHITE + message + RESET);
 		send_string(sender, GRAY + "You whispered to " + YELLOW + u_recipient->nickname + GRAY + ": " + WHITE + message + RESET);
+	
+	// If the recipient is not in the room
 	} else {
 		send_string(sender, RED + "ERROR: That user is not in this room!" + RESET);
 	}
 }
 
+//If a command is wrong, send an error message
 void invalid_command(user* sender){
 	string output = "";
 	output += RED + "ERROR: Invalid command." + RESET;
 	send_string(sender, output);
 }
 
-/*
-	parse_input
-	
-	Arguments: 
-		- (string) input : The input string (C++ string)
-
-	TODO:
-		- Adding extra arguments does not always cause an error
-*/
+//Decide which command function to call based on the user's input
 void parse_input(user* sender, string input){
 	
 	//Removes newline if it is present
@@ -527,6 +545,7 @@ void parse_input(user* sender, string input){
 	}
 }
 
+//Make a string rainbow (unused)
 string rainbow(string input){
 	string product = "";
 	int c = 0;
