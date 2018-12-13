@@ -2,8 +2,8 @@
 Final for CS377
 
 Members:
-Inderjeet Badwal
-Sam Fuschetti
+Inderjeet Badwal,
+Sam Fuschetti,
 Daniel Maryanski
 
 Demonstration Link:
