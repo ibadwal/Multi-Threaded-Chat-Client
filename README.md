@@ -1,6 +1,11 @@
 # 377-Final-Project
 Final for CS377
 
+Members:
+Inderjeet Badwal
+Sam Fuschetti
+Daniel Maryanski
+
 Demonstration Link:
 https://drive.google.com/open?id=10JQ1qHopZ_LZT4xuXPMIDsVFwsvWFzoL
 
